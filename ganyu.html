@@ -9,7 +9,21 @@
   <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link rel="stylesheet" href="style.css">
+
+  <!-- Embedded styles -->
+  <style>
+    .number-display {
+      transition: all 0.3s ease;
+    }
+    .number-change {
+      animation: pulse 0.5s;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+  </style>
 </head>
 <body class="bg-gradient-to-br from-indigo-900 to-purple-800 min-h-screen flex flex-col items-center justify-center p-4">
   <div class="max-w-md w-full bg-white/10 backdrop-blur-md rounded-xl shadow-2xl overflow-hidden p-8" data-aos="fade-up">
@@ -51,7 +65,7 @@
     <!-- Clear button -->
     <div class="flex justify-center">
       <button id="clearBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm transition-colors duration-200 flex items-center">
-        <i data-feather="trash-2" class="mr-2"></i> Clear Saved Number
+        <i data-feather="trash-2" class="mr-2"></i> Clear Saved Data
       </button>
     </div>
 
@@ -107,6 +121,12 @@
       }
     });
 
+    function saveState() {
+      localStorage.setItem('savedNumber', currentNumber);
+      localStorage.setItem('savedLabels', JSON.stringify(numberChart.data.labels));
+      localStorage.setItem('savedData', JSON.stringify(numberChart.data.datasets[0].data));
+    }
+
     function updateNumber() {
       numberDisplay.classList.add('number-change');
       setTimeout(() => numberDisplay.classList.remove('number-change'), 500);
@@ -116,12 +136,13 @@
       else if (random < 0.75) currentNumber -= 1;
 
       numberDisplay.textContent = currentNumber;
-      localStorage.setItem('savedNumber', currentNumber);
 
       step++;
       numberChart.data.labels.push(step);
       numberChart.data.datasets[0].data.push(currentNumber);
       numberChart.update();
+
+      saveState();
     }
 
     submitBtn.addEventListener('click', () => {
@@ -141,13 +162,16 @@
       numberChart.data.datasets[0].data = [currentNumber];
       numberChart.update();
 
-      localStorage.setItem('savedNumber', currentNumber);
+      saveState();
 
       intervalId = setInterval(updateNumber, 3000);
     });
 
     clearBtn.addEventListener('click', () => {
       localStorage.removeItem('savedNumber');
+      localStorage.removeItem('savedLabels');
+      localStorage.removeItem('savedData');
+
       if (intervalId) {
         clearInterval(intervalId);
         intervalId = null;
@@ -161,16 +185,20 @@
       numberChart.update();
     });
 
-    // Load saved number on page load
+    // Load saved state on page load
     window.addEventListener('load', () => {
-      const saved = localStorage.getItem('savedNumber');
-      if (saved !== null) {
-        currentNumber = parseInt(saved);
+      const savedNumber = localStorage.getItem('savedNumber');
+      const savedLabels = JSON.parse(localStorage.getItem('savedLabels') || '[]');
+      const savedData = JSON.parse(localStorage.getItem('savedData') || '[]');
+
+      if (savedNumber !== null && savedData.length > 0) {
+        currentNumber = parseInt(savedNumber);
         numberDisplay.textContent = currentNumber;
         numberInput.value = currentNumber;
 
-        numberChart.data.labels = [0];
-        numberChart.data.datasets[0].data = [currentNumber];
+        step = savedLabels.length > 0 ? savedLabels[savedLabels.length - 1] : 0;
+        numberChart.data.labels = savedLabels;
+        numberChart.data.datasets[0].data = savedData;
         numberChart.update();
 
         intervalId = setInterval(updateNumber, 3000);
