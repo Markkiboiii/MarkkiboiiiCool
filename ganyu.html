@@ -10,7 +10,6 @@
   <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <!-- Embedded styles -->
   <style>
     .number-display {
       transition: all 0.3s ease;
@@ -26,6 +25,11 @@
   </style>
 </head>
 <body class="bg-gradient-to-br from-indigo-900 to-purple-800 min-h-screen flex flex-col items-center justify-center p-4">
+  <!-- Fixed Back Button -->
+  <a href="index.html" class="fixed top-4 left-4 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm transition-colors duration-200 flex items-center z-50">
+    <i data-feather="arrow-left" class="mr-2"></i> Back
+  </a>
+
   <div class="max-w-md w-full bg-white/10 backdrop-blur-md rounded-xl shadow-2xl overflow-hidden p-8" data-aos="fade-up">
     <div class="text-center mb-8">
       <h1 class="text-3xl font-bold text-white mb-2">Number Randomizer</h1>
@@ -67,13 +71,6 @@
       <button id="clearBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm transition-colors duration-200 flex items-center">
         <i data-feather="trash-2" class="mr-2"></i> Clear Saved Data
       </button>
-    </div>
-
-    <!-- Back button -->
-    <div class="flex justify-center mt-6">
-      <a href="index.html" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm transition-colors duration-200 flex items-center">
-        <i data-feather="arrow-left" class="mr-2"></i> Back to Home
-      </a>
     </div>
   </div>
 
@@ -185,7 +182,6 @@
       numberChart.update();
     });
 
-    // Load saved state on page load
     window.addEventListener('load', () => {
       const savedNumber = localStorage.getItem('savedNumber');
       const savedLabels = JSON.parse(localStorage.getItem('savedLabels') || '[]');
