@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en"> 
-<h1>My GitHub Pages site 🎉</h1>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,19 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
     <script src="https://unpkg.com/feather-icons"></script>
-    <style>
-        .number-display {
-            transition: all 0.3s ease;
-        }
-        .number-change {
-            animation: pulse 0.5s;
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-gradient-to-br from-indigo-900 to-purple-800 min-h-screen flex items-center justify-center p-4">
     <div class="max-w-md w-full bg-white/10 backdrop-blur-md rounded-xl shadow-2xl overflow-hidden p-8">
@@ -79,7 +66,6 @@
                 return;
             }
 
-            // Clear any existing interval
             if (intervalId) {
                 clearInterval(intervalId);
             }
@@ -87,24 +73,19 @@
             currentNumber = inputValue;
             numberDisplay.textContent = currentNumber;
             
-            // Start the interval
             intervalId = setInterval(() => {
-                // Add animation class
                 numberDisplay.classList.add('number-change');
                 
-                // Remove animation class after animation completes
                 setTimeout(() => {
                     numberDisplay.classList.remove('number-change');
                 }, 500);
 
-                // Random chance logic
                 const random = Math.random();
                 if (random < 0.5) {
-                    currentNumber += 1; // 50% chance to increase
+                    currentNumber += 1; 
                 } else if (random < 0.75) {
-                    currentNumber -= 1; // 25% chance to decrease
+                    currentNumber -= 1; 
                 }
-                // 25% chance to do nothing
                 
                 numberDisplay.textContent = currentNumber;
             }, 3000);
