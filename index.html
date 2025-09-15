@@ -1,17 +1,22 @@
 <!DOCTYPE html>
-<html lang="en"> 
+<html lang="en">
 <head>
-<h1>My GitHub Pages site 🎉</h1>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Number Randomizer</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script src="https://unpkg.com/feather-icons"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-gradient-to-br from-indigo-900 to-purple-800 min-h-screen flex items-center justify-center p-4">
-    <div class="max-w-md w-full bg-white/10 backdrop-blur-md rounded-xl shadow-2xl overflow-hidden p-8">
+<body class="bg-gradient-to-br from-indigo-900 to-purple-800 min-h-screen flex flex-col items-center justify-center p-4">
+    <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold text-white mb-4">Welcome to my website</h1>
+        <img src="http://static.photos/technology/640x360/42" alt="Technology" class="mx-auto rounded-xl shadow-lg mb-8 w-full max-w-md">
+    </div>
+    <div class="max-w-md w-full bg-white/10 backdrop-blur-md rounded-xl shadow-2xl overflow-hidden p-8" data-aos="fade-up" style="margin-top: -20px">
         <div class="text-center mb-8">
             <h1 class="text-3xl font-bold text-white mb-2">Number Randomizer</h1>
             <p class="text-white/80">Watch your number evolve with random changes!</p>
@@ -28,36 +33,65 @@
                 >
                 <button 
                     id="submitBtn" 
-                    class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-r-lg transition-colors duration-200 flex items-center"
+                    class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-r-lg transition-colors duration-200 flex items-center animate-pulse"
                 >
                     <i data-feather="play" class="mr-2"></i> Start
                 </button>
             </div>
         </div>
 
-        <div class="bg-white/10 rounded-lg p-6 mb-6 transition-all duration-300">
+        <div class="bg-white/10 rounded-lg p-6 mb-6 transition-all duration-300 hover:bg-white/20">
             <p class="text-white/80 mb-2">Current number:</p>
             <div id="numberDisplay" class="text-5xl font-bold text-white text-center number-display">-</div>
         </div>
 
         <div class="text-sm text-white/60">
-            <p>Every 3 seconds, the number has:</p>
-            <ul class="list-disc pl-5 mt-1">
+            <p class="font-medium mb-1">Every 3 seconds, the number has:</p>
+            <ul class="list-disc pl-5 mt-1 space-y-1">
                 <li>50% chance to increase by 1</li>
                 <li>25% chance to decrease by 1</li>
                 <li>25% chance to stay the same</li>
             </ul>
         </div>
+
+        <div class="mt-6 pt-4 border-t border-white/10 flex justify-between items-center">
+            <div class="text-xs text-white/50">
+                <i data-feather="info" class="inline mr-1 w-4 h-4"></i>
+                Click Start to begin the randomization
+            </div>
+            <button id="resetBtn" class="text-xs text-white/70 hover:text-white flex items-center">
+                <i data-feather="refresh-cw" class="mr-1 w-4 h-4"></i> Reset
+            </button>
+        </div>
     </div>
 
     <script>
+        AOS.init();
         feather.replace();
         
         const numberInput = document.getElementById('numberInput');
         const submitBtn = document.getElementById('submitBtn');
+        const resetBtn = document.getElementById('resetBtn');
         const numberDisplay = document.getElementById('numberDisplay');
         let intervalId = null;
         let currentNumber = 0;
+
+        function updateNumber() {
+            numberDisplay.classList.add('number-change');
+            
+            setTimeout(() => {
+                numberDisplay.classList.remove('number-change');
+            }, 500);
+
+            const random = Math.random();
+            if (random < 0.5) {
+                currentNumber += 1; 
+            } else if (random < 0.75) {
+                currentNumber -= 1; 
+            }
+            
+            numberDisplay.textContent = currentNumber;
+        }
 
         submitBtn.addEventListener('click', () => {
             const inputValue = parseInt(numberInput.value);
@@ -74,22 +108,17 @@
             currentNumber = inputValue;
             numberDisplay.textContent = currentNumber;
             
-            intervalId = setInterval(() => {
-                numberDisplay.classList.add('number-change');
-                
-                setTimeout(() => {
-                    numberDisplay.classList.remove('number-change');
-                }, 500);
+            intervalId = setInterval(updateNumber, 3000);
+        });
 
-                const random = Math.random();
-                if (random < 0.5) {
-                    currentNumber += 1; 
-                } else if (random < 0.75) {
-                    currentNumber -= 1; 
-                }
-                
-                numberDisplay.textContent = currentNumber;
-            }, 3000);
+        resetBtn.addEventListener('click', () => {
+            if (intervalId) {
+                clearInterval(intervalId);
+                intervalId = null;
+            }
+            currentNumber = 0;
+            numberDisplay.textContent = '-';
+            numberInput.value = '';
         });
     </script>
 </body>
