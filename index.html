@@ -23,6 +23,11 @@
       <p class="text-white/80">Watch your number evolve with random changes!</p>
     </div>
 
+    <!-- Graph container -->
+    <div class="bg-white/10 rounded-lg p-6 mb-6">
+      <canvas id="numberChart"></canvas>
+    </div>
+
     <div class="mb-6">
       <label for="numberInput" class="block text-sm font-medium text-white mb-2">Enter a number:</label>
       <div class="flex">
@@ -46,11 +51,6 @@
       <div id="numberDisplay" class="text-5xl font-bold text-white text-center number-display">-</div>
     </div>
 
-    <!-- Graph container -->
-    <div class="bg-white/10 rounded-lg p-6 mb-6">
-      <canvas id="numberChart"></canvas>
-    </div>
-
     <div class="text-sm text-white/60">
       <p class="font-medium mb-1">Every 3 seconds, the number has:</p>
       <ul class="list-disc pl-5 mt-1 space-y-1">
@@ -58,16 +58,6 @@
         <li>25% chance to decrease by 1</li>
         <li>25% chance to stay the same</li>
       </ul>
-    </div>
-
-    <div class="mt-6 pt-4 border-t border-white/10 flex justify-between items-center">
-      <div class="text-xs text-white/50">
-        <i data-feather="info" class="inline mr-1 w-4 h-4"></i>
-        Click Start to begin the randomization
-      </div>
-      <button id="resetBtn" class="text-xs text-white/70 hover:text-white flex items-center">
-        <i data-feather="refresh-cw" class="mr-1 w-4 h-4"></i> Reset
-      </button>
     </div>
   </div>
 
@@ -77,7 +67,6 @@
 
     const numberInput = document.getElementById('numberInput');
     const submitBtn = document.getElementById('submitBtn');
-    const resetBtn = document.getElementById('resetBtn');
     const numberDisplay = document.getElementById('numberDisplay');
     const ctx = document.getElementById('numberChart').getContext('2d');
 
@@ -91,7 +80,6 @@
       data: {
         labels: [],
         datasets: [{
-          label: 'Number over time',
           data: [],
           borderColor: 'rgba(255, 255, 255, 0.9)',
           backgroundColor: 'rgba(168, 85, 247, 0.3)',
@@ -102,10 +90,16 @@
       },
       options: {
         responsive: true,
-        plugins: { legend: { labels: { color: 'white' } } },
+        plugins: { legend: { display: false } }, // hides legend
         scales: {
-          x: { ticks: { color: 'white' }, grid: { color: 'rgba(255,255,255,0.1)' } },
-          y: { ticks: { color: 'white' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+          x: {
+            ticks: { display: false }, // hides x-axis numbers
+            grid: { color: 'rgba(255,255,255,0.1)' }
+          },
+          y: {
+            ticks: { color: 'white' },
+            grid: { color: 'rgba(255,255,255,0.1)' }
+          }
         }
       }
     });
@@ -145,20 +139,6 @@
       numberChart.update();
 
       intervalId = setInterval(updateNumber, 3000);
-    });
-
-    resetBtn.addEventListener('click', () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-        intervalId = null;
-      }
-      currentNumber = 0;
-      step = 0;
-      numberDisplay.textContent = '-';
-      numberInput.value = '';
-      numberChart.data.labels = [];
-      numberChart.data.datasets[0].data = [];
-      numberChart.update();
     });
   </script>
 </body>
