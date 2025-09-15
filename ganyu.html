@@ -82,7 +82,6 @@
       document.getElementById('welcomeUser').textContent = `Welcome, ${loggedInUser}`;
     }
 
-    // Helpers for user-specific storage
     function getKey(key) {
       return `${loggedInUser}_${key}`;
     }
@@ -120,18 +119,22 @@
       localStorage.setItem(getKey('number'), currentNumber);
       localStorage.setItem(getKey('labels'), JSON.stringify(numberChart.data.labels));
       localStorage.setItem(getKey('data'), JSON.stringify(numberChart.data.datasets[0].data));
+      localStorage.setItem(getKey('lastUpdate'), Date.now());
+    }
+
+    function randomStep() {
+      const random = Math.random();
+      if (random < 0.5) currentNumber += 1;
+      else if (random < 0.75) currentNumber -= 1;
     }
 
     function updateNumber() {
       numberDisplay.classList.add('number-change');
       setTimeout(() => numberDisplay.classList.remove('number-change'), 500);
 
-      const random = Math.random();
-      if (random < 0.5) currentNumber += 1;
-      else if (random < 0.75) currentNumber -= 1;
+      randomStep();
 
       numberDisplay.textContent = currentNumber;
-
       step++;
       numberChart.data.labels.push(step);
       numberChart.data.datasets[0].data.push(currentNumber);
@@ -166,6 +169,7 @@
       localStorage.removeItem(getKey('number'));
       localStorage.removeItem(getKey('labels'));
       localStorage.removeItem(getKey('data'));
+      localStorage.removeItem(getKey('lastUpdate'));
 
       if (intervalId) { clearInterval(intervalId); intervalId = null; }
       currentNumber = 0;
@@ -181,6 +185,7 @@
       const savedNumber = localStorage.getItem(getKey('number'));
       const savedLabels = JSON.parse(localStorage.getItem(getKey('labels')) || '[]');
       const savedData = JSON.parse(localStorage.getItem(getKey('data')) || '[]');
+      const lastUpdate = parseInt(localStorage.getItem(getKey('lastUpdate')) || '0');
 
       if (savedNumber !== null && savedData.length > 0) {
         currentNumber = parseInt(savedNumber);
@@ -191,6 +196,21 @@
         numberChart.data.labels = savedLabels;
         numberChart.data.datasets[0].data = savedData;
         numberChart.update();
+
+        // Simulate offline progression (30s steps)
+        if (lastUpdate > 0) {
+          const now = Date.now();
+          const elapsed = Math.floor((now - lastUpdate) / 30000); // 30s chunks
+          for (let i = 0; i < elapsed; i++) {
+            randomStep();
+            step++;
+            numberChart.data.labels.push(step);
+            numberChart.data.datasets[0].data.push(currentNumber);
+          }
+          numberDisplay.textContent = currentNumber;
+          numberChart.update();
+          saveState();
+        }
 
         intervalId = setInterval(updateNumber, 3000);
       }
