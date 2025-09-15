@@ -31,6 +31,9 @@
       </button>
     </div>
 
+    <!-- Incentive text -->
+    <p class="text-sm text-center text-yellow-300 mt-3">✨ Sign up now to get a free shiny star ✨</p>
+
     <p id="message" class="text-sm text-center text-white/80 mt-4"></p>
   </div>
 
@@ -68,7 +71,7 @@
 
       users[username] = password;
       saveUsers(users);
-      message.textContent = "Account created successfully! You can now log in.";
+      message.textContent = "⭐ Account created successfully! You received a shiny star!";
     });
 
     loginBtn.addEventListener('click', () => {
