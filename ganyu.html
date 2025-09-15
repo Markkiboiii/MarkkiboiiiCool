@@ -11,12 +11,8 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
-    .number-display {
-      transition: all 0.3s ease;
-    }
-    .number-change {
-      animation: pulse 0.5s;
-    }
+    .number-display { transition: all 0.3s ease; }
+    .number-change { animation: pulse 0.5s; }
     @keyframes pulse {
       0% { transform: scale(1); }
       50% { transform: scale(1.2); }
@@ -25,10 +21,15 @@
   </style>
 </head>
 <body class="bg-gradient-to-br from-indigo-900 to-purple-800 min-h-screen flex flex-col items-center justify-center p-4">
-  <!-- Fixed Back Button -->
-  <a href="index.html" class="fixed top-4 left-4 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm transition-colors duration-200 flex items-center z-50">
-    <i data-feather="arrow-left" class="mr-2"></i> Back
-  </a>
+  <!-- Top-left controls -->
+  <div class="fixed top-4 left-4 flex space-x-2 z-50">
+    <a href="index.html" class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg text-sm transition-colors duration-200 flex items-center">
+      <i data-feather="arrow-left" class="mr-1"></i> Back
+    </a>
+    <button id="logoutBtn" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm transition-colors duration-200 flex items-center">
+      <i data-feather="log-out" class="mr-1"></i> Logout
+    </button>
+  </div>
 
   <div class="max-w-md w-full bg-white/10 backdrop-blur-md rounded-xl shadow-2xl overflow-hidden p-8" data-aos="fade-up">
     <div class="text-center mb-8">
@@ -45,16 +46,8 @@
     <div class="mb-6">
       <label for="numberInput" class="block text-sm font-medium text-white mb-2">Enter a number:</label>
       <div class="flex">
-        <input 
-          type="number" 
-          id="numberInput" 
-          class="flex-1 rounded-l-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white/90 text-gray-800" 
-          placeholder="Enter any number"
-        >
-        <button 
-          id="submitBtn" 
-          class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-r-lg transition-colors duration-200 flex items-center animate-pulse"
-        >
+        <input type="number" id="numberInput" class="flex-1 rounded-l-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white/90 text-gray-800" placeholder="Enter any number">
+        <button id="submitBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-r-lg transition-colors duration-200 flex items-center animate-pulse">
           <i data-feather="play" class="mr-2"></i> Start
         </button>
       </div>
@@ -78,6 +71,18 @@
     AOS.init();
     feather.replace();
 
+    // Redirect if not logged in
+    const loggedInUser = localStorage.getItem('loggedInUser');
+    if (!loggedInUser) {
+      window.location.href = "index.html";
+    }
+
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.removeItem('loggedInUser');
+      window.location.href = "index.html";
+    });
+
     const numberInput = document.getElementById('numberInput');
     const submitBtn = document.getElementById('submitBtn');
     const clearBtn = document.getElementById('clearBtn');
@@ -88,32 +93,15 @@
     let currentNumber = 0;
     let step = 0;
 
-    // Chart.js setup
     const numberChart = new Chart(ctx, {
       type: 'line',
-      data: {
-        labels: [],
-        datasets: [{
-          data: [],
-          borderColor: 'rgba(255, 255, 255, 0.9)',
-          backgroundColor: 'rgba(168, 85, 247, 0.3)',
-          borderWidth: 2,
-          tension: 0.3,
-          fill: true
-        }]
-      },
+      data: { labels: [], datasets: [{ data: [], borderColor: 'rgba(255, 255, 255, 0.9)', backgroundColor: 'rgba(168, 85, 247, 0.3)', borderWidth: 2, tension: 0.3, fill: true }] },
       options: {
         responsive: true,
         plugins: { legend: { display: false } },
         scales: {
-          x: {
-            ticks: { display: false },
-            grid: { color: 'rgba(255,255,255,0.1)' }
-          },
-          y: {
-            ticks: { color: 'white' },
-            grid: { color: 'rgba(255,255,255,0.1)' }
-          }
+          x: { ticks: { display: false }, grid: { color: 'rgba(255,255,255,0.1)' } },
+          y: { ticks: { color: 'white' }, grid: { color: 'rgba(255,255,255,0.1)' } }
         }
       }
     });
@@ -169,10 +157,7 @@
       localStorage.removeItem('savedLabels');
       localStorage.removeItem('savedData');
 
-      if (intervalId) {
-        clearInterval(intervalId);
-        intervalId = null;
-      }
+      if (intervalId) { clearInterval(intervalId); intervalId = null; }
       currentNumber = 0;
       step = 0;
       numberDisplay.textContent = '-';
