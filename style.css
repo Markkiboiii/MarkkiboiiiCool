@@ -1,0 +1,13 @@
+.number-display {
+    transition: all 0.3s ease;
+}
+
+.number-change {
+    animation: pulse 0.5s;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
