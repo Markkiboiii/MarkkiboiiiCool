@@ -3,22 +3,61 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HI :)</title>
+  <title>Number Randomizer</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
   <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-gradient-to-br from-indigo-900 to-purple-800 min-h-screen flex flex-col items-center justify-center p-6">
-  <div class="max-w-2xl w-full bg-white/10 backdrop-blur-md rounded-xl shadow-2xl overflow-hidden p-8" data-aos="fade-up">
-    <h1 class="text-4xl font-bold text-white text-center mb-6">hi</h1>
+<body class="bg-gradient-to-br from-indigo-900 to-purple-800 min-h-screen flex flex-col items-center justify-center p-4">
+  <div class="max-w-md w-full bg-white/10 backdrop-blur-md rounded-xl shadow-2xl overflow-hidden p-8" data-aos="fade-up">
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-white mb-2">Number Randomizer</h1>
+      <p class="text-white/80">Watch your number evolve with random changes!</p>
+    </div>
 
-    <p class="text-white/80 text-center mb-6">
-      wow
-    </p>
+    <!-- Graph -->
+    <div class="bg-white/10 rounded-lg p-6 mb-6">
+      <canvas id="numberChart"></canvas>
+    </div>
 
+    <!-- Input -->
+    <div class="mb-6">
+      <label for="numberInput" class="block text-sm font-medium text-white mb-2">Enter a number:</label>
+      <div class="flex">
+        <input 
+          type="number" 
+          id="numberInput" 
+          class="flex-1 rounded-l-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white/90 text-gray-800" 
+          placeholder="Enter any number"
+        >
+        <button 
+          id="submitBtn" 
+          class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-r-lg transition-colors duration-200 flex items-center animate-pulse"
+        >
+          <i data-feather="play" class="mr-2"></i> Start
+        </button>
+      </div>
+    </div>
+
+    <!-- Current number -->
+    <div class="bg-white/10 rounded-lg p-6 mb-6 transition-all duration-300 hover:bg-white/20">
+      <p class="text-white/80 mb-2">Current number:</p>
+      <div id="numberDisplay" class="text-5xl font-bold text-white text-center number-display">-</div>
+    </div>
+
+    <!-- Clear button -->
     <div class="flex justify-center">
-      <a href="index.html" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg transition-colors duration-200 flex items-center">
+      <button id="clearBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm transition-colors duration-200 flex items-center">
+        <i data-feather="trash-2" class="mr-2"></i> Clear Saved Number
+      </button>
+    </div>
+
+    <!-- Back button -->
+    <div class="flex justify-center mt-6">
+      <a href="index.html" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm transition-colors duration-200 flex items-center">
         <i data-feather="arrow-left" class="mr-2"></i> Back to Home
       </a>
     </div>
@@ -27,6 +66,116 @@
   <script>
     AOS.init();
     feather.replace();
+
+    const numberInput = document.getElementById('numberInput');
+    const submitBtn = document.getElementById('submitBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const numberDisplay = document.getElementById('numberDisplay');
+    const ctx = document.getElementById('numberChart').getContext('2d');
+
+    let intervalId = null;
+    let currentNumber = 0;
+    let step = 0;
+
+    // Chart.js setup
+    const numberChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          data: [],
+          borderColor: 'rgba(255, 255, 255, 0.9)',
+          backgroundColor: 'rgba(168, 85, 247, 0.3)',
+          borderWidth: 2,
+          tension: 0.3,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: {
+            ticks: { display: false },
+            grid: { color: 'rgba(255,255,255,0.1)' }
+          },
+          y: {
+            ticks: { color: 'white' },
+            grid: { color: 'rgba(255,255,255,0.1)' }
+          }
+        }
+      }
+    });
+
+    function updateNumber() {
+      numberDisplay.classList.add('number-change');
+      setTimeout(() => numberDisplay.classList.remove('number-change'), 500);
+
+      const random = Math.random();
+      if (random < 0.5) currentNumber += 1;
+      else if (random < 0.75) currentNumber -= 1;
+
+      numberDisplay.textContent = currentNumber;
+      localStorage.setItem('savedNumber', currentNumber);
+
+      step++;
+      numberChart.data.labels.push(step);
+      numberChart.data.datasets[0].data.push(currentNumber);
+      numberChart.update();
+    }
+
+    submitBtn.addEventListener('click', () => {
+      const inputValue = parseInt(numberInput.value);
+      if (isNaN(inputValue)) {
+        alert('Please enter a valid number');
+        return;
+      }
+
+      if (intervalId) clearInterval(intervalId);
+
+      currentNumber = inputValue;
+      step = 0;
+      numberDisplay.textContent = currentNumber;
+
+      numberChart.data.labels = [0];
+      numberChart.data.datasets[0].data = [currentNumber];
+      numberChart.update();
+
+      localStorage.setItem('savedNumber', currentNumber);
+
+      intervalId = setInterval(updateNumber, 3000);
+    });
+
+    clearBtn.addEventListener('click', () => {
+      localStorage.removeItem('savedNumber');
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+      currentNumber = 0;
+      step = 0;
+      numberDisplay.textContent = '-';
+      numberInput.value = '';
+      numberChart.data.labels = [];
+      numberChart.data.datasets[0].data = [];
+      numberChart.update();
+    });
+
+    // Load saved number on page load
+    window.addEventListener('load', () => {
+      const saved = localStorage.getItem('savedNumber');
+      if (saved !== null) {
+        currentNumber = parseInt(saved);
+        numberDisplay.textContent = currentNumber;
+        numberInput.value = currentNumber;
+
+        numberChart.data.labels = [0];
+        numberChart.data.datasets[0].data = [currentNumber];
+        numberChart.update();
+
+        intervalId = setInterval(updateNumber, 3000);
+      }
+    });
   </script>
 </body>
 </html>
