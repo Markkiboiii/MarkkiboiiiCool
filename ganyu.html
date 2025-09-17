@@ -56,6 +56,12 @@
       <div id="numberDisplay" class="text-5xl font-bold text-white text-center number-display">10</div>
     </div>
 
+    <!-- Mascot -->
+    <div class="bg-white/10 rounded-lg p-6 mb-6 text-center">
+      <p class="text-white/80 mb-2">Our Mascot</p>
+      <img src="mascot.png" alt="Mascot" class="mx-auto w-40 h-40 object-cover rounded-full shadow-lg">
+    </div>
+
     <!-- Stars -->
     <div class="bg-white/10 rounded-lg p-6 mb-6">
       <p class="text-white/80 mb-2">Your stars:</p>
@@ -87,17 +93,32 @@
     const numberDisplay = document.getElementById('numberDisplay');
     const bonusInfo = document.getElementById('bonusInfo');
     const referralHistoryEl = document.getElementById('referralHistory');
+    const ctx = document.getElementById('numberChart').getContext('2d');
+
+    let currentNumber = 10;
+    let step = 0;
+
+    const numberChart = new Chart(ctx, {
+      type: 'line',
+      data: { labels: [], datasets: [
+        { label: "Live", data: [], borderColor: 'rgba(255,255,255,0.9)', backgroundColor: 'rgba(168,85,247,0.3)', borderWidth: 2, tension: 0.3, fill: true }
+      ]},
+      options: { responsive:true, plugins:{legend:{labels:{color:'white'}}}, scales:{
+        x:{ticks:{display:false},grid:{color:'rgba(255,255,255,0.1)'}},
+        y:{ticks:{color:'white'},grid:{color:'rgba(255,255,255,0.1)'}}
+      }}
+    });
 
     const users = JSON.parse(localStorage.getItem('users') || '{}');
 
-    // Apply bonuses
+    // --- Referral bonus + history starts here ---
     if (users[loggedInUser]) {
       if (users[loggedInUser].referralBonus) {
-        numberDisplay.textContent = "20";
+        currentNumber = 20;
         bonusInfo.textContent = "🎁 You joined with a referral code! Starting bonus: +10";
         users[loggedInUser].referralBonus = false;
       } else {
-        numberDisplay.textContent = localStorage.getItem(loggedInUser + "_number") || "10";
+        currentNumber = parseInt(localStorage.getItem(loggedInUser + "_number") || "10");
         if (users[loggedInUser].gotReferralBonus) {
           bonusInfo.textContent = "🎁 You earned a referral reward! Permanent +10 applied.";
         }
@@ -113,10 +134,70 @@
       li.textContent = `⭐ You referred ${name} (+10 bonus)`;
       referralHistoryEl.appendChild(li);
     });
+    // --- Referral bonus + history ends here ---
 
+    numberDisplay.textContent = currentNumber;
+
+    // Update number every 3s
+    function randomStep() {
+      const r = Math.random();
+      if (r < 0.5) currentNumber++;
+      else if (r < 0.75) currentNumber--;
+    }
+    function updateNumber() {
+      randomStep();
+      numberDisplay.textContent = currentNumber;
+      step++;
+      numberChart.data.labels.push(step);
+      numberChart.data.datasets[0].data.push(currentNumber);
+      numberChart.update();
+      localStorage.setItem(loggedInUser + "_number", currentNumber);
+    }
+    setInterval(updateNumber, 3000);
+
+    // Stars system
+    const starsList = document.getElementById('starsList');
+    const starTypes = [
+      "Star of Happy","Star of Shiny","Star of Luck","Star of Peace","Star of Joy",
+      "Star of Dreams","Star of Magic","Star of Wonder","Star of Hope","Star of Light",
+      "Star of Night","Star of Dawn","Star of Energy","Star of Love","Star of Mystery"
+    ];
+    let availableStars = [...starTypes];
+    function addStar() {
+      const chanceDisappear = Math.random();
+      if (starsList.children.length > 0 && chanceDisappear < 0.2) {
+        const index = Math.floor(Math.random() * starsList.children.length);
+        const starText = starsList.children[index].textContent.replace("⭐ ", "");
+        availableStars.push(starText);
+        starsList.removeChild(starsList.children[index]);
+      } else if (availableStars.length > 0) {
+        const starIndex = Math.floor(Math.random() * availableStars.length);
+        const star = availableStars.splice(starIndex, 1)[0];
+        const li = document.createElement("li");
+        li.textContent = `⭐ ${star}`;
+        starsList.appendChild(li);
+      }
+    }
+    setInterval(addStar, 15000);
+
+    // Logout
     document.getElementById('logoutBtn').addEventListener('click', () => {
       localStorage.removeItem('loggedInUser');
       window.location.href = "index.html";
+    });
+
+    // Add custom number
+    document.getElementById('submitBtn').addEventListener('click', () => {
+      const inputValue = parseInt(document.getElementById('numberInput').value);
+      if (!isNaN(inputValue)) {
+        currentNumber += inputValue;
+        numberDisplay.textContent = currentNumber;
+        step++;
+        numberChart.data.labels.push(step);
+        numberChart.data.datasets[0].data.push(currentNumber);
+        numberChart.update();
+        localStorage.setItem(loggedInUser + "_number", currentNumber);
+      }
     });
   </script>
 </body>
