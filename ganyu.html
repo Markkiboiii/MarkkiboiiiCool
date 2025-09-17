@@ -171,11 +171,34 @@
 
     numberDisplay.textContent = currentNumber;
 
-    // Update number every 3s
     function randomStep() {
+      if (currentNumber >= 100) {
+        // Reset when reaching 100
+        currentNumber = 10;
+        numberChart.data.labels = [];
+        numberChart.data.datasets[0].data = [];
+        numberChart.data.datasets[1].data = [];
+        bonusInfo.textContent = "🔄 Reset! You reached 100 and started over.";
+        return;
+      }
+    
+      if (currentNumber >= 49) {
+        // Never allow 50 or more by natural gain
+        return;
+      }
+    
+      const distanceTo50 = 50 - currentNumber;
+      // Probability to increase shrinks as we get closer to 50
+      const increaseChance = distanceTo50 / 50; // e.g. at 25 -> 0.5, at 49 -> 0.02
       const r = Math.random();
-      if (r < 0.5) currentNumber++;
-      else if (r < 0.75) currentNumber--;
+    
+      if (r < increaseChance) {
+        currentNumber++;
+      } else if (r < increaseChance + 0.25) {
+        currentNumber--; // 25% chance to decrease
+      } else {
+        // else stay the same
+      }
     }
     function updateNumber() {
       randomStep();
