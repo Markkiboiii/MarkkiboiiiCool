@@ -98,10 +98,12 @@
     let currentNumber = 10;
     let step = 0;
 
+    // Chart setup
     const numberChart = new Chart(ctx, {
       type: 'line',
       data: { labels: [], datasets: [
-        { label: "Live", data: [], borderColor: 'rgba(255,255,255,0.9)', backgroundColor: 'rgba(168,85,247,0.3)', borderWidth: 2, tension: 0.3, fill: true }
+        { label: "Live", data: [], borderColor: 'rgba(255,255,255,0.9)', backgroundColor: 'rgba(168,85,247,0.3)', borderWidth: 2, tension: 0.3, fill: true },
+        { label: "Offline", data: [], borderColor: 'rgba(255,255,255,0.3)', borderWidth: 1, borderDash: [5,5], tension: 0.3, fill: false }
       ]},
       options: { responsive:true, plugins:{legend:{labels:{color:'white'}}}, scales:{
         x:{ticks:{display:false},grid:{color:'rgba(255,255,255,0.1)'}},
@@ -136,6 +138,37 @@
     });
     // --- Referral bonus + history ends here ---
 
+    // --- Load saved state and simulate offline updates ---
+    let savedLabels = JSON.parse(localStorage.getItem(loggedInUser + "_labels") || "[]");
+    let savedLiveData = JSON.parse(localStorage.getItem(loggedInUser + "_liveData") || "[]");
+    let savedOfflineData = JSON.parse(localStorage.getItem(loggedInUser + "_offlineData") || "[]");
+    let lastUpdate = parseInt(localStorage.getItem(loggedInUser + "_lastUpdate") || "0");
+
+    if (savedLabels.length > 0) {
+      currentNumber = parseInt(localStorage.getItem(loggedInUser + "_number") || "10");
+      step = savedLabels[savedLabels.length - 1];
+      numberChart.data.labels = savedLabels;
+      numberChart.data.datasets[0].data = savedLiveData;
+      numberChart.data.datasets[1].data = savedOfflineData;
+      numberChart.update();
+
+      if (lastUpdate > 0) {
+        const now = Date.now();
+        const elapsed = Math.floor((now - lastUpdate) / 30000); // every 30s
+        for (let i = 0; i < elapsed; i++) {
+          randomStep();
+          step++;
+          numberChart.data.labels.push(step);
+          numberChart.data.datasets[1].data.push(currentNumber);
+        }
+        numberDisplay.textContent = currentNumber;
+        numberChart.update();
+      }
+    } else {
+      localStorage.setItem(loggedInUser + "_number", currentNumber);
+    }
+    // --- End offline simulation ---
+
     numberDisplay.textContent = currentNumber;
 
     // Update number every 3s
@@ -151,9 +184,17 @@
       numberChart.data.labels.push(step);
       numberChart.data.datasets[0].data.push(currentNumber);
       numberChart.update();
-      localStorage.setItem(loggedInUser + "_number", currentNumber);
+      saveState();
     }
     setInterval(updateNumber, 3000);
+
+    function saveState() {
+      localStorage.setItem(loggedInUser + "_number", currentNumber);
+      localStorage.setItem(loggedInUser + "_labels", JSON.stringify(numberChart.data.labels));
+      localStorage.setItem(loggedInUser + "_liveData", JSON.stringify(numberChart.data.datasets[0].data));
+      localStorage.setItem(loggedInUser + "_offlineData", JSON.stringify(numberChart.data.datasets[1].data));
+      localStorage.setItem(loggedInUser + "_lastUpdate", Date.now());
+    }
 
     // Stars system
     const starsList = document.getElementById('starsList');
@@ -196,7 +237,7 @@
         numberChart.data.labels.push(step);
         numberChart.data.datasets[0].data.push(currentNumber);
         numberChart.update();
-        localStorage.setItem(loggedInUser + "_number", currentNumber);
+        saveState();
       }
     });
   </script>
