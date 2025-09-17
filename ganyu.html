@@ -18,6 +18,16 @@
       50% { transform: scale(1.2); }
       100% { transform: scale(1); }
     }
+
+    /* 🔹 Remove up/down arrows from number input */
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type=number] {
+      -moz-appearance: textfield; /* Firefox */
+    }
   </style>
 </head>
 <body class="bg-gradient-to-br from-indigo-900 to-purple-800 min-h-screen flex flex-col items-center justify-center p-4">
@@ -204,7 +214,7 @@
       saveState();
 
       intervalId = setInterval(updateNumber, 3000);
-      if (!starIntervalId) starIntervalId = setInterval(addStar, 60000);
+      if (!starIntervalId) starIntervalId = setInterval(addStar, 15000); // every 15s
     });
 
     clearBtn.addEventListener('click', () => {
@@ -271,7 +281,7 @@
         }
 
         intervalId = setInterval(updateNumber, 3000);
-        if (!starIntervalId) starIntervalId = setInterval(addStar, 60000);
+        if (!starIntervalId) starIntervalId = setInterval(addStar, 15000); // every 15s
       } else {
         // Default starting state
         currentNumber = 10;
