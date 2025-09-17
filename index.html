@@ -54,6 +54,7 @@
       localStorage.setItem('users', JSON.stringify(users));
     }
 
+    // --- SIGNUP ---
     signupBtn.addEventListener('click', () => {
       const username = usernameInput.value.trim();
       const password = passwordInput.value.trim();
@@ -75,15 +76,21 @@
 
       // Check referral
       if (referral && users[referral]) {
-        users[username].referralBonus = true; // new user gets +10 once
+        users[username].referralBonus = true; // new user starts at 20
 
         if (!users[referral].gotReferralBonus) {
           users[referral].gotReferralBonus = true;
 
-          // Instantly boost referrer’s number +10 if they have data
+          // Instantly boost referrer’s number +10
           const refNumberKey = referral + "_number";
           const refNumber = parseInt(localStorage.getItem(refNumberKey) || "10");
           localStorage.setItem(refNumberKey, refNumber + 10);
+
+          // Save referral history
+          const refHistoryKey = referral + "_referrals";
+          const history = JSON.parse(localStorage.getItem(refHistoryKey) || "[]");
+          history.push(username);
+          localStorage.setItem(refHistoryKey, JSON.stringify(history));
         }
       }
 
@@ -91,6 +98,7 @@
       message.textContent = "⭐ Account created successfully!";
     });
 
+    // --- LOGIN ---
     loginBtn.addEventListener('click', () => {
       const username = usernameInput.value.trim();
       const password = passwordInput.value.trim();
