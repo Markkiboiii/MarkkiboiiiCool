@@ -47,11 +47,11 @@
 
     <!-- Input -->
     <div class="mb-6">
-      <label for="numberInput" class="block text-sm font-medium text-white mb-2">Enter a number:</label>
+      <label for="numberInput" class="block text-sm font-medium text-white mb-2">Add to number:</label>
       <div class="flex">
-        <input type="number" id="numberInput" class="flex-1 rounded-l-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white/90 text-gray-800" placeholder="Enter any number">
+        <input type="number" id="numberInput" class="flex-1 rounded-l-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white/90 text-gray-800" placeholder="Enter a number to add">
         <button id="submitBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-r-lg transition-colors duration-200 flex items-center animate-pulse">
-          <i data-feather="play" class="mr-2"></i> Start
+          <i data-feather="plus" class="mr-2"></i> Add
         </button>
       </div>
     </div>
@@ -59,7 +59,13 @@
     <!-- Current number -->
     <div class="bg-white/10 rounded-lg p-6 mb-6 transition-all duration-300 hover:bg-white/20">
       <p class="text-white/80 mb-2">Current number:</p>
-      <div id="numberDisplay" class="text-5xl font-bold text-white text-center number-display">-</div>
+      <div id="numberDisplay" class="text-5xl font-bold text-white text-center number-display">10</div>
+    </div>
+
+    <!-- Stars -->
+    <div class="bg-white/10 rounded-lg p-6 mb-6 transition-all duration-300 hover:bg-white/20">
+      <p class="text-white/80 mb-2">Your stars:</p>
+      <ul id="starsList" class="text-white text-center space-y-1"></ul>
     </div>
 
     <!-- Clear button -->
@@ -96,18 +102,26 @@
     const submitBtn = document.getElementById('submitBtn');
     const clearBtn = document.getElementById('clearBtn');
     const numberDisplay = document.getElementById('numberDisplay');
+    const starsList = document.getElementById('starsList');
     const ctx = document.getElementById('numberChart').getContext('2d');
 
     let intervalId = null;
-    let currentNumber = 0;
+    let starIntervalId = null;
+    let currentNumber = 10; // default starting point
     let step = 0;
 
     const numberChart = new Chart(ctx, {
       type: 'line',
-      data: { labels: [], datasets: [{ data: [], borderColor: 'rgba(255, 255, 255, 0.9)', backgroundColor: 'rgba(168, 85, 247, 0.3)', borderWidth: 2, tension: 0.3, fill: true }] },
+      data: {
+        labels: [],
+        datasets: [
+          { label: "Live", data: [], borderColor: 'rgba(255, 255, 255, 0.9)', backgroundColor: 'rgba(168, 85, 247, 0.3)', borderWidth: 2, tension: 0.3, fill: true },
+          { label: "Offline", data: [], borderColor: 'rgba(255, 255, 255, 0.3)', backgroundColor: 'rgba(255, 255, 255, 0.1)', borderWidth: 1, borderDash: [5,5], tension: 0.3, fill: false }
+        ]
+      },
       options: {
         responsive: true,
-        plugins: { legend: { display: false } },
+        plugins: { legend: { labels: { color: 'white' } } },
         scales: {
           x: { ticks: { display: false }, grid: { color: 'rgba(255,255,255,0.1)' } },
           y: { ticks: { color: 'white' }, grid: { color: 'rgba(255,255,255,0.1)' } }
@@ -115,10 +129,14 @@
       }
     });
 
+    const starTypes = ["Star of Happy", "Star of Shiny", "Star of Luck", "Star of Peace", "Star of Joy"];
+
     function saveState() {
       localStorage.setItem(getKey('number'), currentNumber);
       localStorage.setItem(getKey('labels'), JSON.stringify(numberChart.data.labels));
-      localStorage.setItem(getKey('data'), JSON.stringify(numberChart.data.datasets[0].data));
+      localStorage.setItem(getKey('liveData'), JSON.stringify(numberChart.data.datasets[0].data));
+      localStorage.setItem(getKey('offlineData'), JSON.stringify(numberChart.data.datasets[1].data));
+      localStorage.setItem(getKey('stars'), JSON.stringify([...starsList.children].map(li => li.textContent)));
       localStorage.setItem(getKey('lastUpdate'), Date.now());
     }
 
@@ -143,6 +161,14 @@
       saveState();
     }
 
+    function addStar() {
+      const star = starTypes[Math.floor(Math.random() * starTypes.length)];
+      const li = document.createElement("li");
+      li.textContent = star;
+      starsList.appendChild(li);
+      saveState();
+    }
+
     submitBtn.addEventListener('click', () => {
       const inputValue = parseInt(numberInput.value);
       if (isNaN(inputValue)) {
@@ -152,52 +178,68 @@
 
       if (intervalId) clearInterval(intervalId);
 
-      currentNumber = inputValue;
-      step = 0;
+      currentNumber += inputValue; // add instead of replace
       numberDisplay.textContent = currentNumber;
-
-      numberChart.data.labels = [0];
-      numberChart.data.datasets[0].data = [currentNumber];
+      step++;
+      numberChart.data.labels.push(step);
+      numberChart.data.datasets[0].data.push(currentNumber);
       numberChart.update();
 
       saveState();
 
       intervalId = setInterval(updateNumber, 3000);
+      if (!starIntervalId) starIntervalId = setInterval(addStar, 60000);
     });
 
     clearBtn.addEventListener('click', () => {
       localStorage.removeItem(getKey('number'));
       localStorage.removeItem(getKey('labels'));
-      localStorage.removeItem(getKey('data'));
+      localStorage.removeItem(getKey('liveData'));
+      localStorage.removeItem(getKey('offlineData'));
+      localStorage.removeItem(getKey('stars'));
       localStorage.removeItem(getKey('lastUpdate'));
 
       if (intervalId) { clearInterval(intervalId); intervalId = null; }
-      currentNumber = 0;
+      if (starIntervalId) { clearInterval(starIntervalId); starIntervalId = null; }
+
+      currentNumber = 10; // reset to 10
       step = 0;
-      numberDisplay.textContent = '-';
+      numberDisplay.textContent = '10';
       numberInput.value = '';
+      starsList.innerHTML = '';
       numberChart.data.labels = [];
       numberChart.data.datasets[0].data = [];
+      numberChart.data.datasets[1].data = [];
       numberChart.update();
     });
 
     window.addEventListener('load', () => {
       const savedNumber = localStorage.getItem(getKey('number'));
       const savedLabels = JSON.parse(localStorage.getItem(getKey('labels')) || '[]');
-      const savedData = JSON.parse(localStorage.getItem(getKey('data')) || '[]');
+      const savedLiveData = JSON.parse(localStorage.getItem(getKey('liveData')) || '[]');
+      const savedOfflineData = JSON.parse(localStorage.getItem(getKey('offlineData')) || '[]');
+      const savedStars = JSON.parse(localStorage.getItem(getKey('stars')) || '[]');
       const lastUpdate = parseInt(localStorage.getItem(getKey('lastUpdate')) || '0');
 
-      if (savedNumber !== null && savedData.length > 0) {
+      if (savedNumber !== null) {
         currentNumber = parseInt(savedNumber);
         numberDisplay.textContent = currentNumber;
-        numberInput.value = currentNumber;
+        numberInput.value = "";
 
         step = savedLabels.length > 0 ? savedLabels[savedLabels.length - 1] : 0;
         numberChart.data.labels = savedLabels;
-        numberChart.data.datasets[0].data = savedData;
+        numberChart.data.datasets[0].data = savedLiveData;
+        numberChart.data.datasets[1].data = savedOfflineData;
         numberChart.update();
 
-        // Simulate offline progression (30s steps)
+        starsList.innerHTML = "";
+        savedStars.forEach(star => {
+          const li = document.createElement("li");
+          li.textContent = star;
+          starsList.appendChild(li);
+        });
+
+        // Simulate offline progression
         if (lastUpdate > 0) {
           const now = Date.now();
           const elapsed = Math.floor((now - lastUpdate) / 30000); // 30s chunks
@@ -205,7 +247,7 @@
             randomStep();
             step++;
             numberChart.data.labels.push(step);
-            numberChart.data.datasets[0].data.push(currentNumber);
+            numberChart.data.datasets[1].data.push(currentNumber);
           }
           numberDisplay.textContent = currentNumber;
           numberChart.update();
@@ -213,6 +255,11 @@
         }
 
         intervalId = setInterval(updateNumber, 3000);
+        if (!starIntervalId) starIntervalId = setInterval(addStar, 60000);
+      } else {
+        // Default starting state
+        currentNumber = 10;
+        numberDisplay.textContent = '10';
       }
     });
   </script>
