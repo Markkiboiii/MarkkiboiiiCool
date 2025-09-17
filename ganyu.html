@@ -13,6 +13,7 @@
     input[type=number]::-webkit-inner-spin-button,
     input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     input[type=number] { -moz-appearance: textfield; }
+    #resetBtn.hidden { display: none; }
   </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4">
@@ -56,10 +57,17 @@
       <div id="numberDisplay" class="text-5xl font-bold text-white text-center number-display">10</div>
     </div>
 
+    <!-- Reset button -->
+    <div class="text-center mt-4">
+      <button id="resetBtn" class="hidden bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg">
+        🔄 Reset
+      </button>
+    </div>
+
     <!-- Mascot -->
     <div class="bg-white/10 rounded-lg p-6 mb-6 text-center">
       <p class="text-white/80 mb-2">Our Mascot</p>
-      <img src="mascot.png" alt="Mascot" class="mx-auto w-40 h-40 object-cover rounded-full shadow-lg">
+      <img src="ganyu2.png" alt="Mascot" class="mx-auto w-40 h-40 object-cover rounded-full shadow-lg">
     </div>
 
     <!-- Stars -->
@@ -94,6 +102,7 @@
     const bonusInfo = document.getElementById('bonusInfo');
     const referralHistoryEl = document.getElementById('referralHistory');
     const ctx = document.getElementById('numberChart').getContext('2d');
+    const resetBtn = document.getElementById("resetBtn");
 
     let currentNumber = 10;
     let step = 0;
@@ -128,7 +137,6 @@
       localStorage.setItem('users', JSON.stringify(users));
     }
 
-    // Show referral history
     const history = JSON.parse(localStorage.getItem(loggedInUser + "_referrals") || "[]");
     referralHistoryEl.innerHTML = "";
     history.forEach(name => {
@@ -154,7 +162,7 @@
 
       if (lastUpdate > 0) {
         const now = Date.now();
-        const elapsed = Math.floor((now - lastUpdate) / 30000); // every 30s
+        const elapsed = Math.floor((now - lastUpdate) / 30000);
         for (let i = 0; i < elapsed; i++) {
           randomStep();
           step++;
@@ -171,35 +179,25 @@
 
     numberDisplay.textContent = currentNumber;
 
+    // Update number every 3s
     function randomStep() {
-      if (currentNumber >= 100) {
-        // Reset when reaching 100
-        currentNumber = 10;
-        numberChart.data.labels = [];
-        numberChart.data.datasets[0].data = [];
-        numberChart.data.datasets[1].data = [];
-        bonusInfo.textContent = "🔄 Reset! You reached 100 and started over.";
-        return;
-      }
-    
-      if (currentNumber >= 49) {
-        // Never allow 50 or more by natural gain
-        return;
-      }
-    
-      const distanceTo50 = 50 - currentNumber;
-      // Probability to increase shrinks as we get closer to 50
-      const increaseChance = distanceTo50 / 50; // e.g. at 25 -> 0.5, at 49 -> 0.02
-      const r = Math.random();
-    
-      if (r < increaseChance) {
-        currentNumber++;
-      } else if (r < increaseChance + 0.25) {
-        currentNumber--; // 25% chance to decrease
+      if (currentNumber >= 100) return; // stop at 100, wait for reset
+
+      if (currentNumber < 50) {
+        const distanceTo50 = 50 - currentNumber;
+        const increaseChance = distanceTo50 / 50;
+        const r = Math.random();
+        if (r < increaseChance) currentNumber++;
+        else if (r < increaseChance + 0.25) currentNumber--;
       } else {
-        // else stay the same
+        const distanceFrom50 = currentNumber - 50;
+        const decreaseChance = Math.min(0.7, distanceFrom50 / 50 + 0.25);
+        const r = Math.random();
+        if (r < decreaseChance) currentNumber--;
+        else if (r < decreaseChance + 0.1) currentNumber++;
       }
     }
+
     function updateNumber() {
       randomStep();
       numberDisplay.textContent = currentNumber;
@@ -208,6 +206,7 @@
       numberChart.data.datasets[0].data.push(currentNumber);
       numberChart.update();
       saveState();
+      checkForReset();
     }
     setInterval(updateNumber, 3000);
 
@@ -217,7 +216,30 @@
       localStorage.setItem(loggedInUser + "_liveData", JSON.stringify(numberChart.data.datasets[0].data));
       localStorage.setItem(loggedInUser + "_offlineData", JSON.stringify(numberChart.data.datasets[1].data));
       localStorage.setItem(loggedInUser + "_lastUpdate", Date.now());
+
+      const stars = Array.from(starsList.children).map(li => li.textContent);
+      localStorage.setItem(loggedInUser + "_stars", JSON.stringify(stars));
     }
+
+    function checkForReset() {
+      if (currentNumber >= 100) {
+        resetBtn.classList.remove("hidden");
+      } else {
+        resetBtn.classList.add("hidden");
+      }
+    }
+
+    resetBtn.addEventListener("click", () => {
+      currentNumber = 10;
+      step = 0;
+      numberChart.data.labels = [];
+      numberChart.data.datasets[0].data = [];
+      numberChart.data.datasets[1].data = [];
+      numberChart.update();
+      bonusInfo.textContent = "🔄 Reset successful!";
+      saveState();
+      resetBtn.classList.add("hidden");
+    });
 
     // Stars system
     const starsList = document.getElementById('starsList');
@@ -227,12 +249,23 @@
       "Star of Night","Star of Dawn","Star of Energy","Star of Love","Star of Mystery"
     ];
     let availableStars = [...starTypes];
+
+    function loadStars() {
+      const saved = JSON.parse(localStorage.getItem(loggedInUser + "_stars") || "[]");
+      saved.forEach(star => {
+        const li = document.createElement("li");
+        li.textContent = star;
+        starsList.appendChild(li);
+      });
+    }
+    loadStars();
+
     function addStar() {
       const chanceDisappear = Math.random();
       if (starsList.children.length > 0 && chanceDisappear < 0.2) {
         const index = Math.floor(Math.random() * starsList.children.length);
-        const starText = starsList.children[index].textContent.replace("⭐ ", "");
-        availableStars.push(starText);
+        const starText = starsList.children[index].textContent;
+        availableStars.push(starText.replace("⭐ ", ""));
         starsList.removeChild(starsList.children[index]);
       } else if (availableStars.length > 0) {
         const starIndex = Math.floor(Math.random() * availableStars.length);
@@ -241,6 +274,7 @@
         li.textContent = `⭐ ${star}`;
         starsList.appendChild(li);
       }
+      saveState();
     }
     setInterval(addStar, 15000);
 
@@ -261,6 +295,7 @@
         numberChart.data.datasets[0].data.push(currentNumber);
         numberChart.update();
         saveState();
+        checkForReset();
       }
     });
   </script>
