@@ -62,6 +62,12 @@
       <div id="numberDisplay" class="text-5xl font-bold text-white text-center number-display">10</div>
     </div>
 
+    <!-- Mascot -->
+    <div class="bg-white/10 rounded-lg p-6 mb-6 transition-all duration-300 hover:bg-white/20 text-center">
+      <p class="text-white/80 mb-2">Our Mascot</p>
+      <img src="mascot.png" alt="Mascot" class="mx-auto rounded-lg shadow-lg w-40 h-40 object-cover">
+    </div>
+
     <!-- Stars -->
     <div class="bg-white/10 rounded-lg p-6 mb-6 transition-all duration-300 hover:bg-white/20">
       <p class="text-white/80 mb-2">Your stars:</p>
@@ -129,7 +135,11 @@
       }
     });
 
-    const starTypes = ["Star of Happy", "Star of Shiny", "Star of Luck", "Star of Peace", "Star of Joy"];
+    const starTypes = [
+      "Star of Happy", "Star of Shiny", "Star of Luck", "Star of Peace", "Star of Joy",
+      "Star of Dreams", "Star of Magic", "Star of Wonder", "Star of Hope", "Star of Light",
+      "Star of Night", "Star of Dawn", "Star of Energy", "Star of Love", "Star of Mystery"
+    ];
 
     function saveState() {
       localStorage.setItem(getKey('number'), currentNumber);
@@ -162,10 +172,16 @@
     }
 
     function addStar() {
-      const star = starTypes[Math.floor(Math.random() * starTypes.length)];
-      const li = document.createElement("li");
-      li.textContent = star;
-      starsList.appendChild(li);
+      const chanceDisappear = Math.random();
+      // 20% chance a star disappears
+      if (starsList.children.length > 0 && chanceDisappear < 0.2) {
+        starsList.removeChild(starsList.children[Math.floor(Math.random() * starsList.children.length)]);
+      } else {
+        const star = starTypes[Math.floor(Math.random() * starTypes.length)];
+        const li = document.createElement("li");
+        li.textContent = `⭐ ${star}`;
+        starsList.appendChild(li);
+      }
       saveState();
     }
 
