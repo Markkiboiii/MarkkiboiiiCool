@@ -19,42 +19,15 @@
       transition: all 0.3s ease;
       text-shadow: 0 0 10px #a855f7, 0 0 20px #9333ea;
     }
-    .number-change {
-      animation: pulse 0.5s;
-    }
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.2); }
-      100% { transform: scale(1); }
-    }
-    /* Remove input spinners */
-    input[type=number]::-webkit-inner-spin-button,
-    input[type=number]::-webkit-outer-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
-    input[type=number] {
-      -moz-appearance: textfield;
-    }
-    /* Star list animation */
-    #starsList li {
-      animation: float 3s ease-in-out infinite;
-    }
-    @keyframes float {
-      0% { transform: translateY(0px); }
-      50% { transform: translateY(-5px); }
-      100% { transform: translateY(0px); }
-    }
-    /* Mascot styling */
-    .mascot {
-      border-radius: 50%;
-      box-shadow: 0 0 20px #a855f7, 0 0 40px #9333ea;
-      animation: mascotPulse 3s infinite;
-    }
-    @keyframes mascotPulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-    }
+    .number-change { animation: pulse 0.5s; }
+    @keyframes pulse { 0% { transform: scale(1);} 50% { transform: scale(1.2);} 100% { transform: scale(1);} }
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
+    #starsList li { animation: float 3s ease-in-out infinite; }
+    @keyframes float { 0%{transform:translateY(0px);} 50%{transform:translateY(-5px);} 100%{transform:translateY(0px);} }
+    .mascot { border-radius:50%; box-shadow:0 0 20px #a855f7,0 0 40px #9333ea; animation:mascotPulse 3s infinite; }
+    @keyframes mascotPulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.05);} }
   </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4">
@@ -94,21 +67,27 @@
     </div>
 
     <!-- Current number -->
-    <div class="bg-white/10 rounded-lg p-6 mb-6 transition-all duration-300 hover:bg-white/20">
+    <div class="bg-white/10 rounded-lg p-6 mb-6">
       <p class="text-white/80 mb-2">Current number:</p>
       <div id="numberDisplay" class="text-5xl font-bold text-white text-center number-display">10</div>
     </div>
 
     <!-- Mascot -->
-    <div class="bg-white/10 rounded-lg p-6 mb-6 transition-all duration-300 hover:bg-white/20 text-center">
+    <div class="bg-white/10 rounded-lg p-6 mb-6 text-center">
       <p class="text-white/80 mb-2">Our Mascot</p>
       <img src="mascot.png" alt="Mascot" class="mx-auto mascot w-40 h-40 object-cover">
     </div>
 
     <!-- Stars -->
-    <div class="bg-white/10 rounded-lg p-6 mb-6 transition-all duration-300 hover:bg-white/20">
+    <div class="bg-white/10 rounded-lg p-6 mb-6">
       <p class="text-white/80 mb-2">Your stars:</p>
       <ul id="starsList" class="text-white text-center space-y-1"></ul>
+    </div>
+
+    <!-- Referral Code -->
+    <div class="bg-white/10 rounded-lg p-6 mb-6 text-center">
+      <p class="text-white/80 mb-2">Share your referral code:</p>
+      <p id="referralCode" class="text-yellow-300 font-bold text-lg"></p>
     </div>
 
     <!-- Clear button -->
@@ -123,19 +102,18 @@
     AOS.init();
     feather.replace();
 
-    // Redirect if not logged in
     const loggedInUser = localStorage.getItem('loggedInUser');
     if (!loggedInUser) {
       window.location.href = "index.html";
     } else {
       document.getElementById('welcomeUser').textContent = `Welcome, ${loggedInUser}`;
+      document.getElementById('referralCode').textContent = loggedInUser;
     }
 
     function getKey(key) {
       return `${loggedInUser}_${key}`;
     }
 
-    // Logout
     document.getElementById('logoutBtn').addEventListener('click', () => {
       localStorage.removeItem('loggedInUser');
       window.location.href = "index.html";
@@ -150,34 +128,27 @@
 
     let intervalId = null;
     let starIntervalId = null;
-    let currentNumber = 10; // default starting point
+    let currentNumber = 10;
     let step = 0;
 
     const numberChart = new Chart(ctx, {
       type: 'line',
-      data: {
-        labels: [],
-        datasets: [
-          { label: "Live", data: [], borderColor: 'rgba(255, 255, 255, 0.9)', backgroundColor: 'rgba(168, 85, 247, 0.3)', borderWidth: 2, tension: 0.3, fill: true },
-          { label: "Offline", data: [], borderColor: 'rgba(255, 255, 255, 0.3)', backgroundColor: 'rgba(255, 255, 255, 0.1)', borderWidth: 1, borderDash: [5,5], tension: 0.3, fill: false }
-        ]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { labels: { color: 'white' } } },
-        scales: {
-          x: { ticks: { display: false }, grid: { color: 'rgba(255,255,255,0.1)' } },
-          y: { ticks: { color: 'white' }, grid: { color: 'rgba(255,255,255,0.1)' } }
-        }
-      }
+      data: { labels: [], datasets: [
+        { label: "Live", data: [], borderColor: 'rgba(255,255,255,0.9)', backgroundColor: 'rgba(168,85,247,0.3)', borderWidth: 2, tension: 0.3, fill: true },
+        { label: "Offline", data: [], borderColor: 'rgba(255,255,255,0.3)', backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 1, borderDash: [5,5], tension: 0.3, fill: false }
+      ]},
+      options: { responsive:true, plugins:{legend:{labels:{color:'white'}}}, scales:{
+        x:{ticks:{display:false},grid:{color:'rgba(255,255,255,0.1)'}},
+        y:{ticks:{color:'white'},grid:{color:'rgba(255,255,255,0.1)'}}
+      }}
     });
 
     const starTypes = [
-      "Star of Happy", "Star of Shiny", "Star of Luck", "Star of Peace", "Star of Joy",
-      "Star of Dreams", "Star of Magic", "Star of Wonder", "Star of Hope", "Star of Light",
-      "Star of Night", "Star of Dawn", "Star of Energy", "Star of Love", "Star of Mystery"
+      "Star of Happy","Star of Shiny","Star of Luck","Star of Peace","Star of Joy",
+      "Star of Dreams","Star of Magic","Star of Wonder","Star of Hope","Star of Light",
+      "Star of Night","Star of Dawn","Star of Energy","Star of Love","Star of Mystery"
     ];
-    let availableStars = [...starTypes]; // pool of stars not yet collected
+    let availableStars = [...starTypes];
 
     function saveState() {
       localStorage.setItem(getKey('number'), currentNumber);
@@ -189,139 +160,95 @@
       localStorage.setItem(getKey('lastUpdate'), Date.now());
     }
 
-    function randomStep() {
-      const random = Math.random();
-      if (random < 0.5) currentNumber += 1;
-      else if (random < 0.75) currentNumber -= 1;
-    }
+    function randomStep(){ const r=Math.random(); if(r<0.5)currentNumber+=1; else if(r<0.75)currentNumber-=1; }
 
-    function updateNumber() {
+    function updateNumber(){
       numberDisplay.classList.add('number-change');
-      setTimeout(() => numberDisplay.classList.remove('number-change'), 500);
-
-      randomStep();
-
-      numberDisplay.textContent = currentNumber;
-      step++;
-      numberChart.data.labels.push(step);
+      setTimeout(()=>numberDisplay.classList.remove('number-change'),500);
+      randomStep(); numberDisplay.textContent=currentNumber;
+      step++; numberChart.data.labels.push(step);
       numberChart.data.datasets[0].data.push(currentNumber);
-      numberChart.update();
-
-      saveState();
+      numberChart.update(); saveState();
     }
 
-    function addStar() {
-      const chanceDisappear = Math.random();
-      if (starsList.children.length > 0 && chanceDisappear < 0.2) {
-        // remove a random star
-        const index = Math.floor(Math.random() * starsList.children.length);
-        const starText = starsList.children[index].textContent.replace("⭐ ", "");
-        availableStars.push(starText); // return to pool
+    function addStar(){
+      const chanceDisappear=Math.random();
+      if(starsList.children.length>0 && chanceDisappear<0.2){
+        const index=Math.floor(Math.random()*starsList.children.length);
+        const starText=starsList.children[index].textContent.replace("⭐ ","");
+        availableStars.push(starText);
         starsList.removeChild(starsList.children[index]);
-      } else if (availableStars.length > 0) {
-        // add a new unique star
-        const starIndex = Math.floor(Math.random() * availableStars.length);
-        const star = availableStars.splice(starIndex, 1)[0]; // remove from pool
-        const li = document.createElement("li");
-        li.textContent = `⭐ ${star}`;
-        starsList.appendChild(li);
+      } else if(availableStars.length>0){
+        const starIndex=Math.floor(Math.random()*availableStars.length);
+        const star=availableStars.splice(starIndex,1)[0];
+        const li=document.createElement("li");
+        li.textContent=`⭐ ${star}`; starsList.appendChild(li);
       }
       saveState();
     }
 
-    submitBtn.addEventListener('click', () => {
-      const inputValue = parseInt(numberInput.value);
-      if (isNaN(inputValue)) {
-        alert('Please enter a valid number');
-        return;
-      }
-
-      if (intervalId) clearInterval(intervalId);
-
-      currentNumber += inputValue;
-      numberDisplay.textContent = currentNumber;
-      step++;
-      numberChart.data.labels.push(step);
+    submitBtn.addEventListener('click',()=>{
+      const inputValue=parseInt(numberInput.value);
+      if(isNaN(inputValue)){alert('Please enter a valid number');return;}
+      if(intervalId)clearInterval(intervalId);
+      currentNumber+=inputValue;
+      numberDisplay.textContent=currentNumber;
+      step++; numberChart.data.labels.push(step);
       numberChart.data.datasets[0].data.push(currentNumber);
-      numberChart.update();
-
-      saveState();
-
-      intervalId = setInterval(updateNumber, 3000);
-      if (!starIntervalId) starIntervalId = setInterval(addStar, 15000);
+      numberChart.update(); saveState();
+      intervalId=setInterval(updateNumber,3000);
+      if(!starIntervalId)starIntervalId=setInterval(addStar,15000);
     });
 
-    clearBtn.addEventListener('click', () => {
-      localStorage.removeItem(getKey('number'));
-      localStorage.removeItem(getKey('labels'));
-      localStorage.removeItem(getKey('liveData'));
-      localStorage.removeItem(getKey('offlineData'));
-      localStorage.removeItem(getKey('stars'));
-      localStorage.removeItem(getKey('availableStars'));
+    clearBtn.addEventListener('click',()=>{
+      localStorage.removeItem(getKey('number')); localStorage.removeItem(getKey('labels'));
+      localStorage.removeItem(getKey('liveData')); localStorage.removeItem(getKey('offlineData'));
+      localStorage.removeItem(getKey('stars')); localStorage.removeItem(getKey('availableStars'));
       localStorage.removeItem(getKey('lastUpdate'));
-
-      if (intervalId) { clearInterval(intervalId); intervalId = null; }
-      if (starIntervalId) { clearInterval(starIntervalId); starIntervalId = null; }
-
-      currentNumber = 10;
-      step = 0;
-      numberDisplay.textContent = '10';
-      numberInput.value = '';
-      starsList.innerHTML = '';
-      availableStars = [...starTypes];
-      numberChart.data.labels = [];
-      numberChart.data.datasets[0].data = [];
-      numberChart.data.datasets[1].data = [];
-      numberChart.update();
+      if(intervalId){clearInterval(intervalId);intervalId=null;}
+      if(starIntervalId){clearInterval(starIntervalId);starIntervalId=null;}
+      currentNumber=10; step=0; numberDisplay.textContent='10'; numberInput.value='';
+      starsList.innerHTML=''; availableStars=[...starTypes];
+      numberChart.data.labels=[]; numberChart.data.datasets[0].data=[];
+      numberChart.data.datasets[1].data=[]; numberChart.update();
     });
 
-    window.addEventListener('load', () => {
-      const savedNumber = localStorage.getItem(getKey('number'));
-      const savedLabels = JSON.parse(localStorage.getItem(getKey('labels')) || '[]');
-      const savedLiveData = JSON.parse(localStorage.getItem(getKey('liveData')) || '[]');
-      const savedOfflineData = JSON.parse(localStorage.getItem(getKey('offlineData')) || '[]');
-      const savedStars = JSON.parse(localStorage.getItem(getKey('stars')) || '[]');
-      const savedAvailableStars = JSON.parse(localStorage.getItem(getKey('availableStars')) || 'null');
-      const lastUpdate = parseInt(localStorage.getItem(getKey('lastUpdate')) || '0');
-
-      if (savedAvailableStars) availableStars = savedAvailableStars;
-
-      if (savedNumber !== null) {
-        currentNumber = parseInt(savedNumber);
-        numberDisplay.textContent = currentNumber;
-
-        step = savedLabels.length > 0 ? savedLabels[savedLabels.length - 1] : 0;
-        numberChart.data.labels = savedLabels;
-        numberChart.data.datasets[0].data = savedLiveData;
-        numberChart.data.datasets[1].data = savedOfflineData;
+    window.addEventListener('load',()=>{
+      const users=JSON.parse(localStorage.getItem('users')||'{}');
+      const savedNumber=localStorage.getItem(getKey('number'));
+      const savedLabels=JSON.parse(localStorage.getItem(getKey('labels'))||'[]');
+      const savedLiveData=JSON.parse(localStorage.getItem(getKey('liveData'))||'[]');
+      const savedOfflineData=JSON.parse(localStorage.getItem(getKey('offlineData'))||'[]');
+      const savedStars=JSON.parse(localStorage.getItem(getKey('stars'))||'[]');
+      const savedAvailableStars=JSON.parse(localStorage.getItem(getKey('availableStars'))||'null');
+      const lastUpdate=parseInt(localStorage.getItem(getKey('lastUpdate'))||'0');
+      if(savedAvailableStars)availableStars=savedAvailableStars;
+      if(savedNumber!==null){
+        currentNumber=parseInt(savedNumber);
+        numberDisplay.textContent=currentNumber;
+        step=savedLabels.length>0?savedLabels[savedLabels.length-1]:0;
+        numberChart.data.labels=savedLabels;
+        numberChart.data.datasets[0].data=savedLiveData;
+        numberChart.data.datasets[1].data=savedOfflineData;
         numberChart.update();
-
-        starsList.innerHTML = "";
-        savedStars.forEach(star => {
-          const li = document.createElement("li");
-          li.textContent = star;
-          starsList.appendChild(li);
+        starsList.innerHTML=""; savedStars.forEach(star=>{
+          const li=document.createElement("li"); li.textContent=star; starsList.appendChild(li);
         });
-
-        if (lastUpdate > 0) {
-          const now = Date.now();
-          const elapsed = Math.floor((now - lastUpdate) / 30000);
-          for (let i = 0; i < elapsed; i++) {
-            randomStep();
-            step++;
-            numberChart.data.labels.push(step);
-            numberChart.data.datasets[1].data.push(currentNumber);
-          }
-          numberDisplay.textContent = currentNumber;
-          numberChart.update();
-          saveState();
+        if(lastUpdate>0){
+          const now=Date.now(); const elapsed=Math.floor((now-lastUpdate)/30000);
+          for(let i=0;i<elapsed;i++){randomStep();step++;numberChart.data.labels.push(step);numberChart.data.datasets[1].data.push(currentNumber);}
+          numberDisplay.textContent=currentNumber; numberChart.update(); saveState();
         }
-
-        intervalId = setInterval(updateNumber, 3000);
-        if (!starIntervalId) starIntervalId = setInterval(addStar, 15000);
+        intervalId=setInterval(updateNumber,3000);
+        if(!starIntervalId)starIntervalId=setInterval(addStar,15000);
       } else {
-        currentNumber = 10;
-        numberDisplay.textContent = '10';
+        // check referral bonus
+        if(users[loggedInUser] && users[loggedInUser].referralBonus){
+          currentNumber=20;
+        } else {
+          currentNumber=10;
+        }
+        numberDisplay.textContent=currentNumber;
       }
     });
   </script>
